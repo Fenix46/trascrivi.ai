@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-import { Transcription, RecordingState, ExportFormat, TranscriptionChunk } from '../types';
+import { Transcription, RecordingState, ExportFormat, TranscriptionChunk, GeminiModel } from '../types';
 
 export class TauriService {
   static async startRecording(): Promise<string> {
@@ -29,6 +29,18 @@ export class TauriService {
 
   static async setApiKey(apiKey: string): Promise<void> {
     return await invoke('set_api_key', { apiKey });
+  }
+
+  static async getAvailableModels(): Promise<GeminiModel[]> {
+    return await invoke('get_available_models');
+  }
+
+  static async setSelectedModel(model: string): Promise<void> {
+    return await invoke('set_selected_model', { model });
+  }
+
+  static async getSelectedModel(): Promise<string> {
+    return await invoke('get_selected_model');
   }
 
   static async getRecordingState(): Promise<RecordingState | null> {

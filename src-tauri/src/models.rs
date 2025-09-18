@@ -69,6 +69,7 @@ pub struct AppState {
     pub transcriptions: HashMap<String, Transcription>,
     pub current_recording: Option<RecordingState>,
     pub gemini_api_key: Option<String>,
+    pub selected_model: String,
 }
 
 impl Default for AppState {
@@ -77,6 +78,7 @@ impl Default for AppState {
             transcriptions: HashMap::new(),
             current_recording: None,
             gemini_api_key: None,
+            selected_model: "gemini-2.5-flash".to_string(),
         }
     }
 }
@@ -95,4 +97,46 @@ pub struct TranscriptionChunk {
     pub start_time: f64,
     pub end_time: f64,
     pub is_final: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeminiModel {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub supports_audio: bool,
+    pub context_window: String,
+}
+
+pub fn get_available_models() -> Vec<GeminiModel> {
+    vec![
+        GeminiModel {
+            id: "gemini-2.5-flash".to_string(),
+            name: "Gemini 2.5 Flash".to_string(),
+            description: "Best price/performance, audio support, thinking capabilities".to_string(),
+            supports_audio: true,
+            context_window: "1M tokens".to_string(),
+        },
+        GeminiModel {
+            id: "gemini-2.5-pro".to_string(),
+            name: "Gemini 2.5 Pro".to_string(),
+            description: "Most powerful model for complex reasoning and analysis".to_string(),
+            supports_audio: true,
+            context_window: "2M tokens".to_string(),
+        },
+        GeminiModel {
+            id: "gemini-2.0-flash".to_string(),
+            name: "Gemini 2.0 Flash".to_string(),
+            description: "Fast with native tool use and improved capabilities".to_string(),
+            supports_audio: true,
+            context_window: "1M tokens".to_string(),
+        },
+        GeminiModel {
+            id: "gemini-1.5-pro".to_string(),
+            name: "Gemini 1.5 Pro (Legacy)".to_string(),
+            description: "Available only for existing projects with prior usage".to_string(),
+            supports_audio: true,
+            context_window: "2M tokens".to_string(),
+        },
+    ]
 }

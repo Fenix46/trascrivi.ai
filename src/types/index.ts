@@ -55,3 +55,11 @@ export interface TranscriptionChunk {
   end_time: number;
   is_final: boolean;
 }
+
+export interface GeminiModel {
+  id: string;
+  name: string;
+  description: string;
+  supports_audio: boolean;
+  context_window: string;
+}

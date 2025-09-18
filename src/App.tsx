@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RecordingControls } from './components/RecordingControls';
 import { TranscriptionList } from './components/TranscriptionList';
 import { TranscriptionView } from './components/TranscriptionView';
@@ -19,6 +19,8 @@ function App() {
     setRecordingState,
     updateRecordingText,
     setError,
+    setAvailableModels,
+    setSelectedModel,
     toggleSidebar,
   } = useAppStore();
 
@@ -33,6 +35,13 @@ function App() {
 
         const recordingState = await TauriService.getRecordingState();
         setRecordingState(recordingState);
+
+        // Load available models and selected model
+        const models = await TauriService.getAvailableModels();
+        setAvailableModels(models);
+
+        const selectedModel = await TauriService.getSelectedModel();
+        setSelectedModel(selectedModel);
       } catch (error) {
         setError(`Failed to load data: ${error}`);
       }
@@ -48,7 +57,7 @@ function App() {
     return () => {
       unsubscribe.then(unlisten => unlisten());
     };
-  }, [setTranscriptions, setRecordingState, updateRecordingText, setError]);
+  }, [setTranscriptions, setRecordingState, updateRecordingText, setError, setAvailableModels, setSelectedModel]);
 
   const handleSelectTranscription = (transcription: any) => {
     setSelectedTranscription(transcription);
@@ -99,7 +108,7 @@ function App() {
 
         <TranscriptionView
           transcription={isLiveView ? null : selectedTranscription}
-          isLive={isLiveView}
+          isLive={isLiveView || false}
         />
       </div>
 

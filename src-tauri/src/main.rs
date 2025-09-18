@@ -44,13 +44,13 @@ async fn start_recording(
     }
 
     // Start transcription service if API key is available
-    let api_key = {
+    let (api_key, model) = {
         let app_state = state.lock().unwrap();
-        app_state.gemini_api_key.clone()
+        (app_state.gemini_api_key.clone(), app_state.selected_model.clone())
     };
 
     if let Some(api_key) = api_key {
-        let transcription_service = TranscriptionService::new(api_key);
+        let transcription_service = TranscriptionService::new(api_key, model);
         let transcription_rx = transcription_service
             .start_streaming_transcription(audio_rx)
             .await
@@ -158,6 +158,34 @@ async fn set_api_key(
 }
 
 #[tauri::command]
+async fn get_available_models() -> std::result::Result<Vec<models::GeminiModel>, String> {
+    Ok(models::get_available_models())
+}
+
+#[tauri::command]
+async fn set_selected_model(
+    model: String,
+    state: State<'_, AppStateType>,
+    storage: State<'_, StorageService>,
+) -> std::result::Result<(), String> {
+    {
+        let mut app_state = state.lock().unwrap();
+        app_state.selected_model = model;
+    }
+
+    let app_state = state.lock().unwrap().clone();
+    storage.save_app_state(&app_state).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_selected_model(
+    state: State<'_, AppStateType>,
+) -> std::result::Result<String, String> {
+    let app_state = state.lock().unwrap();
+    Ok(app_state.selected_model.clone())
+}
+
+#[tauri::command]
 async fn get_recording_state(
     state: State<'_, AppStateType>,
 ) -> std::result::Result<Option<RecordingState>, String> {
@@ -173,13 +201,13 @@ async fn analyze_transcription_structure(
 ) -> std::result::Result<Transcription, String> {
     let mut transcription = storage.load_transcription(&id).await.map_err(|e| e.to_string())?;
 
-    let api_key = {
+    let (api_key, model) = {
         let app_state = state.lock().unwrap();
-        app_state.gemini_api_key.clone()
+        (app_state.gemini_api_key.clone(), app_state.selected_model.clone())
     };
 
     if let Some(api_key) = api_key {
-        let transcription_service = TranscriptionService::new(api_key);
+        let transcription_service = TranscriptionService::new(api_key, model);
         let chapters = transcription_service
             .analyze_content_structure(&transcription.raw_text)
             .await
@@ -238,6 +266,9 @@ async fn main() {
             delete_transcription,
             export_transcription,
             set_api_key,
+            get_available_models,
+            set_selected_model,
+            get_selected_model,
             get_recording_state,
             analyze_transcription_structure
         ])

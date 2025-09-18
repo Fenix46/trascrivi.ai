@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Transcription, RecordingState, TranscriptionChunk } from '../types';
+import { Transcription, RecordingState, TranscriptionChunk, GeminiModel } from '../types';
 
 interface AppStore {
   // State
@@ -9,6 +9,8 @@ interface AppStore {
   isLoading: boolean;
   error: string | null;
   apiKey: string | null;
+  availableModels: GeminiModel[];
+  selectedModel: string;
   sidebarCollapsed: boolean;
 
   // Actions
@@ -22,11 +24,13 @@ interface AppStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setApiKey: (key: string | null) => void;
+  setAvailableModels: (models: GeminiModel[]) => void;
+  setSelectedModel: (model: string) => void;
   toggleSidebar: () => void;
   resetStore: () => void;
 }
 
-export const useAppStore = create<AppStore>((set, get) => ({
+export const useAppStore = create<AppStore>((set) => ({
   // Initial state
   transcriptions: [],
   selectedTranscription: null,
@@ -34,6 +38,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   isLoading: false,
   error: null,
   apiKey: null,
+  availableModels: [],
+  selectedModel: 'gemini-2.5-flash',
   sidebarCollapsed: false,
 
   // Actions
@@ -88,6 +94,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setApiKey: (key) => set({ apiKey: key }),
 
+  setAvailableModels: (models) => set({ availableModels: models }),
+
+  setSelectedModel: (model) => set({ selectedModel: model }),
+
   toggleSidebar: () =>
     set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
@@ -99,5 +109,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       isLoading: false,
       error: null,
       sidebarCollapsed: false,
+      availableModels: [],
+      selectedModel: 'gemini-2.5-flash',
     }),
 }));
