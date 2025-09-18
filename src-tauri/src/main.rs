@@ -28,6 +28,7 @@ async fn start_recording(
     let transcription_id = uuid::Uuid::new_v4().to_string();
 
     // Initialize audio capture
+    println!("Starting audio capture for transcription: {}", transcription_id);
     let mut audio_capture_instance = AudioCapture::new().map_err(|e| e.to_string())?;
     let audio_rx = audio_capture_instance.start_recording().map_err(|e| e.to_string())?;
 
@@ -74,9 +75,13 @@ async fn stop_recording(
 ) -> std::result::Result<Transcription, String> {
 
     // Create transcription from current state
+    println!("Stopping recording and creating transcription");
     let transcription = {
         let mut app_state = state.lock().unwrap();
-        if let Some(recording_state) = app_state.current_recording.take() {
+        if let Some(mut recording_state) = app_state.current_recording.take() {
+            // Set recording to false to signal audio capture to stop
+            recording_state.is_recording = false;
+
             let transcription = Transcription {
                 id: recording_state.transcription_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
                 title: "New Transcription".to_string(),

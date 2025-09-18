@@ -36,7 +36,10 @@ impl TranscriptionService {
             let mut last_transcription_time = std::time::Instant::now();
             const TRANSCRIPTION_INTERVAL: std::time::Duration = std::time::Duration::from_millis(2000);
 
+            println!("TranscriptionService: Waiting for audio chunks...");
+
             while let Some(chunk) = audio_rx.recv().await {
+                println!("TranscriptionService: Received audio chunk with {} samples", chunk.data.len());
                 accumulated_audio.extend_from_slice(&chunk.data);
 
                 if last_transcription_time.elapsed() >= TRANSCRIPTION_INTERVAL && !accumulated_audio.is_empty() {
@@ -44,6 +47,13 @@ impl TranscriptionService {
                     accumulated_audio.clear();
                     last_transcription_time = std::time::Instant::now();
 
+                    // Skip very small audio chunks to avoid API errors
+                    if audio_data.len() < 1000 {
+                        println!("TranscriptionService: Skipping small audio chunk ({} samples)", audio_data.len());
+                        continue;
+                    }
+
+                    println!("TranscriptionService: Sending {} samples to Gemini API", audio_data.len());
                     match Self::transcribe_audio_chunk(&client, &api_key, &base_url, &model, audio_data, chunk.sample_rate).await {
                         Ok(text) => {
                             if !text.trim().is_empty() {
